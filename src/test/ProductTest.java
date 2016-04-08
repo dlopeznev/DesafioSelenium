@@ -68,11 +68,8 @@ public class ProductTest
     	try
     	{
 	        wd.get("http://demo.opencart.com/index.php?route=common/home");
-	        wd.findElement(By.name("search")).click();
-	        wd.findElement(By.name("search")).clear();
 	        wd.findElement(By.name("search")).sendKeys(product);
 	        wd.findElement(By.xpath("//span[@class='input-group-btn']/button")).click();
-	        wd.findElement(By.id("grid-view")).click();
 	        
 	        WebElement productTag = wd.findElement(By.xpath("//div[@class='product-thumb']/div[@class='image']/a/img"));
 	        
