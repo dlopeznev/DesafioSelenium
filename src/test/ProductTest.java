@@ -2,7 +2,6 @@ package test;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.junit.After;
@@ -12,18 +11,15 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
-import org.openqa.selenium.By;
-import org.openqa.selenium.NoAlertPresentException;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.firefox.FirefoxDriver;
 
 import files.FileHandler;
-import product.ProductHandler;
+import pageobject.HomePage;
 
 @RunWith(value = Parameterized.class)
 public class ProductTest 
 {
-    FirefoxDriver wd;
+    HomePage homePage;
     String product;
     
     public ProductTest (String product) 
@@ -34,11 +30,13 @@ public class ProductTest
     @Parameters(name = "Producto -> {0}")
 	public static Iterable<Object[]> fileProducts() 
     {
-		ProductHandler ph = new ProductHandler();
+		HomePage homePage = new HomePage();
 		FileHandler fh = new FileHandler();
 		
 		//Obtengo todos los productos
-		List<String> allProducts = ph.getAllProducts(2);
+		List<String> allProducts = homePage.getAllProductsTitles();
+		
+		homePage.quit();
 		
 		//Guardo los mismos
 		fh.writeFile("/file/allProducts.txt", ",", allProducts);
@@ -58,8 +56,7 @@ public class ProductTest
     @Before
     public void setUp() throws Exception 
     {
-        wd = new FirefoxDriver();
-        wd.manage().timeouts().implicitlyWait(120, TimeUnit.SECONDS);
+    	this.homePage = new HomePage();
     }
     
     @Test
@@ -67,17 +64,17 @@ public class ProductTest
     {
     	try
     	{
-	        wd.get("http://demo.opencart.com/index.php?route=common/home");
-	        wd.findElement(By.name("search")).sendKeys(product);
-	        wd.findElement(By.xpath("//span[@class='input-group-btn']/button")).click();
+	        this.homePage.open();
+    		this.homePage.getSearchInput().sendKeys(product);
+	        this.homePage.getSearchButton().click();
 	        
-	        WebElement productTag = wd.findElement(By.xpath("//div[@class='product-thumb']/div[@class='image']/a/img"));
+	        List<WebElement> products = this.homePage.getProducts();
 	        
-	        if (productTag != null)
-	        	Assert.assertEquals(productTag.getAttribute("title").trim().toLowerCase(), product.trim().toLowerCase());
+	        if (products != null && products.size() == 1)
+	        	Assert.assertEquals(products.get(0).getAttribute("title").trim().toLowerCase(), product.trim().toLowerCase());
 	        
 	        else
-	        	Assert.assertNotNull(productTag);
+	        	Assert.assertNotNull(products);
         }
         catch (Exception e)
         {
@@ -87,20 +84,8 @@ public class ProductTest
     }
     
     @After
-    public void tearDown() {
-        wd.quit();
-    }
-    
-    public static boolean isAlertPresent(FirefoxDriver wd) 
+    public void tearDown() 
     {
-        try 
-        {
-            wd.switchTo().alert();
-            return true;
-        } 
-        catch (NoAlertPresentException e) 
-        {
-            return false;
-        }
+        this.homePage.quit();
     }
 }
